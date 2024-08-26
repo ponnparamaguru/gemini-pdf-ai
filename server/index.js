@@ -23,6 +23,29 @@ const upload = multer({
   }
 });
 
+function formatResponse(text) {
+  
+  const sections = text.split(/\*\*(.+?)\*\*/);
+  
+  let formattedResponse = '';
+
+  sections.forEach((section, index) => {
+    if (index === 0) {
+      
+      formattedResponse += section.trim();
+    } else {
+      const [heading, ...contentParts] = section.split('\n');
+      const headingText = heading.trim();
+      const contentText = contentParts.join('\n').trim();
+      
+      formattedResponse += `\n\n**${headingText}**\n${contentText}`;
+    }
+  });
+  formattedResponse = formattedResponse.replace(/\* /g, '\n* ');
+
+  return formattedResponse;
+}
+
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 
 app.use(cors());
@@ -36,7 +59,7 @@ function isRelevant(prompt, pdfText) {
   const pdfWordSet = new Set(pdfWords);
   const commonWords = promptWords.filter(word => pdfWordSet.has(word));
   const relevanceRatio = commonWords.length / promptWords.length;
-  return relevanceRatio > 0.1; // Adjust relevance threshold as needed
+  return relevanceRatio > 0.1; 
 }
 
 app.post('/api/chat', upload.array('pdfs'), async (req, res) => {
@@ -76,7 +99,9 @@ app.post('/api/chat', upload.array('pdfs'), async (req, res) => {
     const response = await result.response;
     const text = await response.text();
 
-    res.json({ reply: text });
+    const formattedText = formatResponse(text);
+
+    res.json({ reply: formattedText });
 
   } catch (error) {
     console.error('Error in /api/chat endpoint:', error);
