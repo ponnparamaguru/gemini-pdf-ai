@@ -11,9 +11,9 @@ dotenv.config();
 
 const app = express();
 const upload = multer({
-  dest: 'uploads/',
+  dest: '/tmp/uploads/', 
   limits: {
-    fileSize: 10 * 1024 * 1024
+    fileSize: 10 * 1024 * 1024 // 10 MB file size limit
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype !== 'application/pdf') {
@@ -36,10 +36,10 @@ function isRelevant(prompt, pdfText) {
   const pdfWordSet = new Set(pdfWords);
   const commonWords = promptWords.filter(word => pdfWordSet.has(word));
   const relevanceRatio = commonWords.length / promptWords.length;
-  return relevanceRatio > 0.1; 
+  return relevanceRatio > 0.1; // Adjust relevance threshold as needed
 }
 
-app.post('/chat', upload.array('pdfs'), async (req, res) => {
+app.post('/api/chat', upload.array('pdfs'), async (req, res) => {
   try {
     const files = req.files;
     const userMessage = req.body.message;
@@ -49,13 +49,7 @@ app.post('/chat', upload.array('pdfs'), async (req, res) => {
       return res.status(400).json({ error: 'No files were uploaded.' });
     }
 
-    // Process each uploaded file
     for (const file of files) {
-      if (!file.path) {
-        console.error('File path is missing for file:', file);
-        return res.status(400).json({ error: 'File path is missing' });
-      }
-
       try {
         const dataBuffer = fs.readFileSync(file.path);
         const data = await pdf(dataBuffer);
@@ -80,18 +74,14 @@ app.post('/chat', upload.array('pdfs'), async (req, res) => {
     const prompt = `${userMessage}: ${combinedText}`;
     const result = await model.generateContent(prompt, { maxTokens: 100 });
     const response = await result.response;
-    let text = await response.text();
+    const text = await response.text();
 
     res.json({ reply: text });
 
   } catch (error) {
-    console.error('Error in /chat endpoint:', error);
-    if (!res.headersSent) {
-      return res.status(500).json({ error: 'An error occurred while processing the request.' });
-    }
+    console.error('Error in /api/chat endpoint:', error);
+    res.status(500).json({ error: 'An error occurred while processing the request.' });
   }
 });
 
-app.listen(5000, () => {
-  console.log('Server started on http://localhost:5000');
-});
+module.exports = app;
