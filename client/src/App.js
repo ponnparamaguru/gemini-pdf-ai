@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { FaFileUpload, FaPaperPlane, FaRegTrashAlt, FaTimes } from 'react-icons/fa';
 import SplashScreen from './SplashScreen';
+import { marked } from 'marked';
 
 function App() {
   const [files, setFiles] = useState([]);
@@ -14,7 +15,7 @@ function App() {
   const [aiTyping, setAiTyping] = useState(false);
 
   const fileInputRef = useRef(null);
-  const chatEndRef = useRef(null); // Ref for scrolling
+  const chatEndRef = useRef(null);
 
   const handleFileChange = (e) => {
     setFiles(e.target.files);
@@ -53,9 +54,11 @@ function App() {
         },
       });
 
+      const formattedResponse = marked(response.data.reply);
+
       setMessages((prevMessages) => [
         ...prevMessages,
-        { type: 'ai', text: response.data.reply },
+        { type: 'ai', text: formattedResponse },
       ]);
     } catch (error) {
       console.error('Error uploading files:', error);
@@ -111,24 +114,23 @@ function App() {
   }, [messages]);
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col bg-gray-100">
       {showSplash && <SplashScreen onHide={handleSplashHide} />}
-      <div className='bg-teal-500 w-full h-14 flex items-center pl-10'>
-        <h1 className='text-2xl font-semibold text-white'>AI PDF Assistance</h1>
+      <div className='bg-teal-500 w-full h-14 flex items-center pl-4 md:pl-10'>
+        <h1 className='text-xl md:text-2xl font-semibold text-white'>AI PDF Assistance</h1>
       </div>
       <div className={`flex-1 overflow-y-auto p-4 bg-gray-50 border-t border-gray-300 ${showSplash ? 'hidden' : ''}`}>
         <div className="h-full flex flex-col">
           {messages.length === 0 && !aiTyping ? (
-            <div className="flex-1 text-center mt-96 md:mt-10 text-gray-500">No messages yet</div>
+            <div className="flex-1 text-center mt-32 md:mt-10 text-gray-500">No messages yet</div>
           ) : (
             <div className="flex-1 overflow-y-auto">
               {messages.map((msg, index) => (
                 <div key={index} className={`mb-2 flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
                     className={`px-4 py-2 rounded-lg ${msg.type === 'user' ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800'} shadow-md`}
-                  >
-                    {msg.text}
-                  </div>
+                    dangerouslySetInnerHTML={{ __html: msg.text }} 
+                  />
                 </div>
               ))}
               {aiTyping && (
@@ -138,7 +140,7 @@ function App() {
                   </div>
                 </div>
               )}
-              <div ref={chatEndRef} /> {/* Reference for scrolling */}
+              <div ref={chatEndRef} /> 
             </div>
           )}
         </div>
@@ -149,7 +151,7 @@ function App() {
           onClick={openModal}
           className='p-2 bg-teal-500 text-white hover:bg-teal-600 rounded-md'
         >
-          <FaFileUpload className="text-white" size={24} />
+          <FaFileUpload className="text-white" size={20} />
         </button>
 
         <input
