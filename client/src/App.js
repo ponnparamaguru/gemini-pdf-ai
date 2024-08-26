@@ -176,7 +176,7 @@ function App() {
         <button
           type="button"
           onClick={handleClear}
-          className={`p-2 border border-transparent rounded-md shadow-md text-white ${messages.length === 0 ? 'bg-gray-300' : 'bg-red-500 hover:bg-red-600'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}
+          className={`hidden md:block p-2 border border-transparent rounded-md shadow-md text-white ${messages.length === 0 ? 'bg-gray-300' : 'bg-red-500 hover:bg-red-600'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500`}
           disabled={messages.length === 0}
         >
           <FaRegTrashAlt size={20} />
